@@ -29,13 +29,18 @@ Pulse Tasks is the project I would ship for a MERN machine test if I had one sho
    ```
 
 2. **Configure environment**
-   Copy `.env.example` → `.env` in the repo root and tweak values. Minimum keys:
+   Copy `.env.example` → `.env` in the repo root and tweak values.(create .env in /backend directory for backend & /frontend for frontend) Minimum keys:
    ```
+   ##backend
+   
    PORT=5000
    MONGO_URI=mongodb://127.0.0.1:27017/mern_machine_test
    JWT_SECRET=replace-with-strong-secret
    CLIENT_URL=http://localhost:5173
    CRON_TZ=UTC
+
+   ##frontend 
+   
    VITE_API_URL=http://localhost:5000
    ```
    - `CLIENT_URL` can be comma-separated if you allow several origins.
