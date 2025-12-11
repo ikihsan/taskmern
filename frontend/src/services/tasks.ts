@@ -1,5 +1,5 @@
 import api from './api';
-import type { Task, TaskInput } from '../types/task';
+import type { Task, TaskInput, PaginationParams, PaginatedTasksResponse } from '../types/task';
 
 const toFormData = (payload: TaskInput) => {
   const formData = new FormData();
@@ -14,9 +14,9 @@ const toFormData = (payload: TaskInput) => {
   return formData;
 };
 
-export const fetchTasks = async (): Promise<Task[]> => {
-  const { data } = await api.get('/tasks');
-  return data.data;
+export const fetchTasks = async (params?: PaginationParams): Promise<PaginatedTasksResponse> => {
+  const { data } = await api.get('/tasks', { params });
+  return { data: data.data, pagination: data.pagination };
 };
 
 export const createTaskRequest = async (payload: TaskInput): Promise<Task> => {

@@ -14,12 +14,20 @@ const TasksPage = () => {
   const queryClient = useQueryClient();
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
 
-  const tasksQuery = useQuery({ queryKey: ['tasks'], queryFn: fetchTasks });
+  const tasksQuery = useQuery({ 
+    queryKey: ['tasks', page, limit], 
+    queryFn: () => fetchTasks({ page, limit })
+  });
 
   const createMutation = useMutation({
     mutationFn: createTaskRequest,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tasks'] })
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      setPage(1); // Reset to first page after creating
+    }
   });
 
   const updateMutation = useMutation({
@@ -58,9 +66,22 @@ const TasksPage = () => {
     navigate('/login');
   };
 
-  const tasks = tasksQuery.data ?? [];
+  const tasks = tasksQuery.data?.data ?? [];
+  const pagination = tasksQuery.data?.pagination;
   const overdueCount = tasks.filter((task) => task.status === 'overdue').length;
   const completedCount = tasks.filter((task) => task.status === 'completed').length;
+
+  const handlePrevPage = () => {
+    if (pagination?.hasPrevPage) {
+      setPage((prev) => prev - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (pagination?.hasNextPage) {
+      setPage((prev) => prev + 1);
+    }
+  };
 
   return (
     <div className="app-shell">
@@ -73,7 +94,7 @@ const TasksPage = () => {
           <div className="header-stats">
             <div className="stat-card">
               <div className="stat-label">Total</div>
-              <div className="stat-value">{tasks.length}</div>
+              <div className="stat-value">{pagination?.totalTasks ?? 0}</div>
             </div>
             <div className="stat-card">
               <div className="stat-label">Overdue</div>
@@ -110,17 +131,53 @@ const TasksPage = () => {
             </div>
           )}
           {tasks.length > 0 && (
-            <div className="task-grid">
-              {tasks.map((task) => (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  onEdit={setEditingTask}
-                  onDelete={handleDelete}
-                  deleting={deletingId === task.id}
-                />
-              ))}
-            </div>
+            <>
+              <div className="task-grid">
+                {tasks.map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    onEdit={setEditingTask}
+                    onDelete={handleDelete}
+                    deleting={deletingId === task.id}
+                  />
+                ))}
+              </div>
+              {pagination && pagination.totalPages > 1 && (
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'center', 
+                  alignItems: 'center', 
+                  gap: '1rem', 
+                  marginTop: '2rem',
+                  padding: '1rem'
+                }}>
+                  <button 
+                    className="btn btn--ghost" 
+                    onClick={handlePrevPage}
+                    disabled={!pagination.hasPrevPage}
+                    style={{ minWidth: '100px' }}
+                  >
+                    Previous
+                  </button>
+                  <span style={{ 
+                    fontSize: '0.9rem', 
+                    color: 'var(--text-muted)',
+                    fontWeight: '500'
+                  }}>
+                    Page {pagination.page} of {pagination.totalPages}
+                  </span>
+                  <button 
+                    className="btn btn--ghost" 
+                    onClick={handleNextPage}
+                    disabled={!pagination.hasNextPage}
+                    style={{ minWidth: '100px' }}
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </section>
       </main>

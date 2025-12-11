@@ -34,10 +34,29 @@ const formatTask = (task, req) => ({
 });
 
 exports.getTasks = asyncHandler(async (req, res) => {
-  const tasks = await Task.find({ owner: req.user.id }).sort({ dueDate: 1 });
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  const totalTasks = await Task.countDocuments({ owner: req.user.id });
+  const tasks = await Task.find({ owner: req.user.id })
+    .sort({ dueDate: 1 })
+    .skip(skip)
+    .limit(limit);
+
+  const totalPages = Math.ceil(totalTasks / limit);
+
   res.json({
     success: true,
-    data: tasks.map((task) => formatTask(task, req))
+    data: tasks.map((task) => formatTask(task, req)),
+    pagination: {
+      page,
+      limit,
+      totalTasks,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1
+    }
   });
 });
 

@@ -16,3 +16,22 @@ export interface TaskInput {
   status?: TaskStatus;
   attachment?: File | null;
 }
+
+export interface PaginationParams {
+  page?: number;
+  limit?: number;
+}
+
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  totalTasks: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
+export interface PaginatedTasksResponse {
+  data: Task[];
+  pagination: PaginationMeta;
+}
